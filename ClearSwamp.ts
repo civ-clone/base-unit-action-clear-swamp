@@ -7,15 +7,43 @@ import {
   MovementCost,
   IMovementCostRegistry,
 } from '@civ-clone/core-unit/Rules/MovementCost';
+import {
+  RuleRegistry,
+  instance as ruleRegistryInstance,
+} from '@civ-clone/core-rule/RuleRegistry';
+import {
+  TerrainFeatureRegistry,
+  instance as terrainFeatureRegistryInstance,
+} from '@civ-clone/core-terrain-feature/TerrainFeatureRegistry';
+import {
+  Turn,
+  instance as turnInstance,
+} from '@civ-clone/core-turn-based-game/Turn';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
-import { Grassland } from '@civ-clone/base-terrain-grassland/Grassland';
-import { Shield } from '@civ-clone/base-terrain-feature-shield/Shield';
-import { instance as terrainFeatureRegistryInstance } from '@civ-clone/core-terrain-feature/TerrainFeatureRegistry';
+import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
+import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
+import Tile from '@civ-clone/core-world/Tile';
+import Unit from '@civ-clone/core-unit/Unit';
 
 // TODO: This is specific to the original Civilization and might need to be labelled as `-civ1` as other games have
 //  forests as a feature
 export class ClearSwamp extends DelayedAction {
-  perform() {
+  #terrainFeatureRegistry: TerrainFeatureRegistry;
+
+  constructor(
+    from: Tile,
+    to: Tile,
+    unit: Unit,
+    ruleRegistry: RuleRegistry = ruleRegistryInstance,
+    terrainFeatureRegistry: TerrainFeatureRegistry = terrainFeatureRegistryInstance,
+    turn: Turn = turnInstance
+  ) {
+    super(from, to, unit, ruleRegistry, turn);
+
+    this.#terrainFeatureRegistry = terrainFeatureRegistry;
+  }
+
+  perform(): void {
     const [
       moveCost,
     ]: number[] = (this.ruleRegistry() as IMovementCostRegistry)
@@ -24,7 +52,7 @@ export class ClearSwamp extends DelayedAction {
 
     super.perform(moveCost, (): void => {
       const terrain = new Grassland(),
-        features = terrainFeatureRegistryInstance.getByTerrain(
+        features = this.#terrainFeatureRegistry.getByTerrain(
           this.from().terrain()
         );
 
