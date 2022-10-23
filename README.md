@@ -1,4 +1,3 @@
 # base-unit-action-clear-swamp
 
-This is a template repo.
-
+This package provides the `ClearSwamp` `Action` for `Unit`s.

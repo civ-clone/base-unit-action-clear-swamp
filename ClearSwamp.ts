@@ -1,13 +1,4 @@
 import {
-  Feature,
-  IFeatureRegistry,
-} from '@civ-clone/core-terrain-feature/Rules/Feature';
-import { Moved, IMovedRegistry } from '@civ-clone/core-unit/Rules/Moved';
-import {
-  MovementCost,
-  IMovementCostRegistry,
-} from '@civ-clone/core-unit/Rules/MovementCost';
-import {
   RuleRegistry,
   instance as ruleRegistryInstance,
 } from '@civ-clone/core-rule/RuleRegistry';
@@ -21,7 +12,10 @@ import {
 } from '@civ-clone/core-turn-based-game/Turn';
 import ClearingSwamp from './Rules/ClearingSwamp';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
+import Feature from '@civ-clone/core-terrain-feature/Rules/Feature';
 import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
+import Moved from '@civ-clone/core-unit/Rules/Moved';
+import MovementCost from '@civ-clone/core-unit/Rules/MovementCost';
 import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
 import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
@@ -45,7 +39,7 @@ export class ClearSwamp extends DelayedAction {
   }
 
   perform(): void {
-    const [moveCost]: number[] = (this.ruleRegistry() as IMovementCostRegistry)
+    const [moveCost]: number[] = this.ruleRegistry()
       .process(MovementCost, this.unit(), this)
       .sort((a: number, b: number): number => b - a);
 
@@ -57,11 +51,7 @@ export class ClearSwamp extends DelayedAction {
             this.from().terrain()
           );
 
-        (this.ruleRegistry() as IFeatureRegistry).process(
-          Feature,
-          Shield,
-          terrain
-        );
+        this.ruleRegistry().process(Feature, Shield, terrain);
 
         this.#terrainFeatureRegistry.unregister(...features);
 
@@ -70,7 +60,7 @@ export class ClearSwamp extends DelayedAction {
       ClearingSwamp
     );
 
-    (this.ruleRegistry() as IMovedRegistry).process(Moved, this.unit(), this);
+    this.ruleRegistry().process(Moved, this.unit(), this);
   }
 }
 
