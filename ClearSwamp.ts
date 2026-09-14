@@ -12,16 +12,17 @@ import {
 } from '@civ-clone/core-turn-based-game/Turn';
 import ClearingSwamp from './Rules/ClearingSwamp';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
-import Feature from '@civ-clone/core-terrain-feature/Rules/Feature';
-import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
 import Moved from '@civ-clone/core-unit/Rules/Moved';
 import MovementCost from '@civ-clone/core-unit/Rules/MovementCost';
-import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
+import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
 import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
+import registerDelayedAction from '@civ-clone/core-unit/registerDelayedAction';
+import Feature from '@civ-clone/core-terrain-feature/Rules/Feature';
+import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
 
-// TODO: This is specific to the original Civilization and might need to be labelled as `-civ1` as other games have
-//  forests as a feature
+export const COMPLETE = 'base-unit-action-clear-swamp:complete';
+
 export class ClearSwamp extends DelayedAction {
   private _terrainFeatureRegistry: TerrainFeatureRegistry;
 
@@ -43,25 +44,33 @@ export class ClearSwamp extends DelayedAction {
       .process(MovementCost, this.unit(), this)
       .sort((a: number, b: number): number => b - a);
 
-    super.perform(
-      moveCost,
-      (): void => {
-        const terrain = new Grassland(),
-          features = this._terrainFeatureRegistry.getByTerrain(
-            this.from().terrain()
-          );
-
-        this.ruleRegistry().process(Feature, Shield, terrain);
-
-        this._terrainFeatureRegistry.unregister(...features);
-
-        this.from().setTerrain(terrain);
-      },
-      ClearingSwamp
-    );
+    super.perform(moveCost, COMPLETE, ClearingSwamp);
 
     this.ruleRegistry().process(Moved, this.unit(), this);
   }
 }
+
+// Registered here rather than passed to `perform` as a closure: a closure
+// cannot be written to a file, which is why a unit part-way through this could
+// not be saved. `this.from()` becomes `unit.tile()` — the same tile, since
+// `isCurrentTile` is one of this action's criteria — and the registries come
+// from their singletons rather than the action instance.
+registerDelayedAction({
+  BusyRule: ClearingSwamp,
+  handler: COMPLETE,
+  action: (unit: Unit) => new ClearSwamp(unit.tile(), unit.tile(), unit),
+  complete: (unit: Unit) => {
+    const terrain = new Grassland(),
+      features = terrainFeatureRegistryInstance.getByTerrain(
+        unit.tile().terrain()
+      );
+
+    ruleRegistryInstance.process(Feature, Shield, terrain);
+
+    terrainFeatureRegistryInstance.unregister(...features);
+
+    unit.tile().setTerrain(terrain);
+  },
+});
 
 export default ClearSwamp;
