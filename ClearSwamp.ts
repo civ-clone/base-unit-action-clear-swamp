@@ -24,6 +24,10 @@ import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
 export const COMPLETE = 'base-unit-action-clear-swamp:complete';
 
 export class ClearSwamp extends DelayedAction {
+  // The terrain finishing leaves behind, a static for the same reason `complete` is: the UI is sent it to show what the
+  //  action will do, so it is read from here rather than worked out again elsewhere.
+  static readonly result = Grassland;
+
   private _terrainFeatureRegistry: TerrainFeatureRegistry;
 
   constructor(
@@ -68,7 +72,7 @@ export class ClearSwamp extends DelayedAction {
    * fields, and does not change `keyof this`.
    */
   static complete(action: ClearSwamp): void {
-    const terrain = new Grassland(),
+    const terrain = new ClearSwamp.result(),
       features = action._terrainFeatureRegistry.getByTerrain(
         action.from().terrain()
       );
