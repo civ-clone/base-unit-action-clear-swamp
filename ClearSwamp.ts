@@ -18,6 +18,8 @@ import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
 import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
 import registerDelayedAction from '@civ-clone/core-unit/registerDelayedAction';
+import Feature from '@civ-clone/core-terrain-feature/Rules/Feature';
+import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
 
 export const COMPLETE = 'base-unit-action-clear-swamp:complete';
 
@@ -52,8 +54,9 @@ export class ClearSwamp extends DelayedAction {
   }
 
   /**
-   * What finishing does: the square takes `result`, and its tile's rules
-   * (`TerrainChanged`) decide what follows it onto the new terrain.
+   * What finishing does: the new terrain rolls for a Shield (`Feature`), the
+   * square takes it, and its tile's rules (`TerrainChanged`) decide what
+   * follows it onto the new terrain.
    *
    * This was the closure passed to `perform`, bound to `this`. Converting it
    * to a `PendingEffect` handler first moved it to module scope, where `this`
@@ -69,9 +72,13 @@ export class ClearSwamp extends DelayedAction {
    * A static method does not change `keyof this`.
    */
   static complete(action: ClearSwamp): void {
-    // What follows the square onto its new terrain (its features, for one) is the rule set's `TerrainChanged` rules'
-    //  to decide.
-    action.from().setTerrain(new ClearSwamp.result());
+    const terrain = new ClearSwamp.result();
+
+    // The new square rolls for a Shield, as before. What follows the square onto its new terrain (its old features)
+    //  is the rule set's `TerrainChanged` rules' to decide.
+    action.ruleRegistry().process(Feature, Shield, terrain);
+
+    action.from().setTerrain(terrain);
   }
 }
 

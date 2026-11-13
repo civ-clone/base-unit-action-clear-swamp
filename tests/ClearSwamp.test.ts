@@ -1,5 +1,7 @@
 import ClearSwamp from '../ClearSwamp';
 import Effect from '@civ-clone/core-rule/Effect';
+import Feature from '@civ-clone/core-terrain-feature/Rules/Feature';
+import Shield from '@civ-clone/base-terrain-feature-shield/Shield';
 import Grassland from '@civ-clone/base-terrain-grassland/Grassland';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import Terrain from '@civ-clone/core-terrain/Terrain';
@@ -93,5 +95,33 @@ describe('ClearSwamp', (): void => {
         .getByTerrain(from)
         .map((feature: TerrainFeature) => feature.constructor)
     ).to.deep.equal([Ore, Fruit]);
+  });
+
+  it('should roll for a Shield on the new terrain, before `TerrainChanged`', (): void => {
+    const ruleRegistry = new RuleRegistry(),
+      seen: string[] = [];
+
+    ruleRegistry.register(
+      new Feature(
+        new Effect(
+          (FeatureType: typeof TerrainFeature, terrain: Terrain): void => {
+            seen.push(
+              `Feature ${FeatureType === Shield} ${
+                terrain instanceof Grassland
+              }`
+            );
+          }
+        )
+      ),
+      new TerrainChanged(
+        new Effect((tile: Tile, from: Terrain, to: Terrain): void => {
+          seen.push(`TerrainChanged ${tile.terrain() === to}`);
+        })
+      )
+    );
+
+    complete(ruleRegistry, new TerrainFeatureRegistry());
+
+    expect(seen).to.deep.equal(['Feature true true', 'TerrainChanged true']);
   });
 });

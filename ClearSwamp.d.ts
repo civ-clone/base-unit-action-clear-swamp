@@ -22,8 +22,9 @@ export declare class ClearSwamp extends DelayedAction {
   );
   perform(): void;
   /**
-   * What finishing does: the square takes `result`, and its tile's rules
-   * (`TerrainChanged`) decide what follows it onto the new terrain.
+   * What finishing does: the new terrain rolls for a Shield (`Feature`), the
+   * square takes it, and its tile's rules (`TerrainChanged`) decide what
+   * follows it onto the new terrain.
    *
    * This was the closure passed to `perform`, bound to `this`. Converting it
    * to a `PendingEffect` handler first moved it to module scope, where `this`

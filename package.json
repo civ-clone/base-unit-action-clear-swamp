@@ -29,6 +29,7 @@
     "typescript": "^4.0.0"
   },
   "dependencies": {
+    "@civ-clone/base-terrain-feature-shield": "^0.1.0",
     "@civ-clone/base-terrain-grassland": "^0.1.0",
     "@civ-clone/core-rule": "^0.1.0",
     "@civ-clone/core-terrain-feature": "^0.1.0",

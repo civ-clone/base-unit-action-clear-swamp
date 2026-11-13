@@ -10,6 +10,8 @@ const Moved_1 = require("@civ-clone/core-unit/Rules/Moved");
 const MovementCost_1 = require("@civ-clone/core-unit/Rules/MovementCost");
 const Grassland_1 = require("@civ-clone/base-terrain-grassland/Grassland");
 const registerDelayedAction_1 = require("@civ-clone/core-unit/registerDelayedAction");
+const Feature_1 = require("@civ-clone/core-terrain-feature/Rules/Feature");
+const Shield_1 = require("@civ-clone/base-terrain-feature-shield/Shield");
 exports.COMPLETE = 'base-unit-action-clear-swamp:complete';
 class ClearSwamp extends DelayedAction_1.default {
     /**
@@ -27,8 +29,9 @@ class ClearSwamp extends DelayedAction_1.default {
         this.ruleRegistry().process(Moved_1.default, this.unit(), this);
     }
     /**
-     * What finishing does: the square takes `result`, and its tile's rules
-     * (`TerrainChanged`) decide what follows it onto the new terrain.
+     * What finishing does: the new terrain rolls for a Shield (`Feature`), the
+     * square takes it, and its tile's rules (`TerrainChanged`) decide what
+     * follows it onto the new terrain.
      *
      * This was the closure passed to `perform`, bound to `this`. Converting it
      * to a `PendingEffect` handler first moved it to module scope, where `this`
@@ -44,9 +47,11 @@ class ClearSwamp extends DelayedAction_1.default {
      * A static method does not change `keyof this`.
      */
     static complete(action) {
-        // What follows the square onto its new terrain (its features, for one) is the rule set's `TerrainChanged` rules'
-        //  to decide.
-        action.from().setTerrain(new ClearSwamp.result());
+        const terrain = new ClearSwamp.result();
+        // The new square rolls for a Shield, as before. What follows the square onto its new terrain (its old features)
+        //  is the rule set's `TerrainChanged` rules' to decide.
+        action.ruleRegistry().process(Feature_1.default, Shield_1.default, terrain);
+        action.from().setTerrain(terrain);
     }
 }
 exports.ClearSwamp = ClearSwamp;
