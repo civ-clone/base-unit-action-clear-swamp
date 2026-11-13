@@ -28,8 +28,10 @@ export class ClearSwamp extends DelayedAction {
   //  because a public instance member would make the class unassignable to `Action` (see `complete`).
   static readonly result = Grassland;
 
-  private _terrainFeatureRegistry: TerrainFeatureRegistry;
-
+  /**
+   * `terrainFeatureRegistry` is no longer used: the rule set's `TerrainChanged`
+   * rules move the square's features. It stays so the signature doesn't change.
+   */
   constructor(
     from: Tile,
     to: Tile,
@@ -39,8 +41,6 @@ export class ClearSwamp extends DelayedAction {
     turn: Turn = turnInstance
   ) {
     super(from, to, unit, ruleRegistry, turn);
-
-    this._terrainFeatureRegistry = terrainFeatureRegistry;
   }
 
   perform(): void {
@@ -54,8 +54,9 @@ export class ClearSwamp extends DelayedAction {
   }
 
   /**
-   * What finishing does, against the registries this action was constructed
-   * with.
+   * What finishing does: the new terrain rolls for a Shield (`Feature`), the
+   * square takes it, and its tile's rules (`TerrainChanged`) decide what
+   * follows it onto the new terrain.
    *
    * This was the closure passed to `perform`, bound to `this`. Converting it
    * to a `PendingEffect` handler first moved it to module scope, where `this`
@@ -68,18 +69,14 @@ export class ClearSwamp extends DelayedAction {
    * Static, because an instance method would not compile: a new public member
    * makes this class unassignable to `Action` (`DataObject._keys:
    * (keyof this)[]`), and it is passed as one to `MovementCost` and `Moved`.
-   * A static method of the class may still read its instances' private
-   * fields, and does not change `keyof this`.
+   * A static method does not change `keyof this`.
    */
   static complete(action: ClearSwamp): void {
-    const terrain = new ClearSwamp.result(),
-      features = action._terrainFeatureRegistry.getByTerrain(
-        action.from().terrain()
-      );
+    const terrain = new ClearSwamp.result();
 
+    // The new square rolls for a Shield, as before. What follows the square onto its new terrain (its old features)
+    //  is the rule set's `TerrainChanged` rules' to decide.
     action.ruleRegistry().process(Feature, Shield, terrain);
-
-    action._terrainFeatureRegistry.unregister(...features);
 
     action.from().setTerrain(terrain);
   }
