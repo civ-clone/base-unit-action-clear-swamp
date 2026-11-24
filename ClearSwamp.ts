@@ -1,3 +1,4 @@
+import { BusyContext } from '@civ-clone/core-unit/BusyRegistry';
 import {
   RuleRegistry,
   instance as ruleRegistryInstance,
@@ -88,7 +89,17 @@ export class ClearSwamp extends DelayedAction {
 registerDelayedAction({
   BusyRule: ClearingSwamp,
   handler: COMPLETE,
-  action: (unit: Unit) => new ClearSwamp(unit.tile(), unit.tile(), unit),
+  // Built from the game the unit is loaded into, so finishing after a load writes where that game looks
+  //  (civ-clone/web-renderer#248).
+  action: (unit: Unit, context: BusyContext) =>
+    new ClearSwamp(
+      unit.tile(),
+      unit.tile(),
+      unit,
+      context.rules,
+      (context as { terrainFeatures?: TerrainFeatureRegistry }).terrainFeatures,
+      context.turn
+    ),
   complete: (unit, pendingEffect, action) => ClearSwamp.complete(action),
 });
 
